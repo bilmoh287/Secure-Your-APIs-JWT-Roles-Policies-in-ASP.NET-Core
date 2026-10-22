@@ -72,24 +72,24 @@ namespace StudentApi.Controllers
 
 
         [HttpGet("{id}", Name = "GetStudentById")]
-        
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-
-        public ActionResult<Student> GetStudentById(int id)
+        public async Task<ActionResult<Student>>GetStudentById(int id, [FromServices] IAuthorizationService authorizationService)
         {
-
             if (id < 1)
-            {
-                return BadRequest($"Not accepted ID {id}");
-            }
+                return BadRequest("Invalid student id.");
 
-            var student = StudentDataSimulation.StudentsList.FirstOrDefault(s => s.Id == id);
+            var student = StudentDataSimulation.StudentsList
+                .FirstOrDefault(s => s.Id == id);
+
             if (student == null)
-            {
-                return NotFound($"Student with ID {id} not found.");
-            }
+                return NotFound("Student not found.");
+
+            var authResult = await authorizationService.AuthorizeAsync(
+                User,
+                id,
+                "StudentOwnerOrAdmin");
+
+            if (!authResult.Succeeded)
+                return Forbid(); // 403
 
             return Ok(student);
         }

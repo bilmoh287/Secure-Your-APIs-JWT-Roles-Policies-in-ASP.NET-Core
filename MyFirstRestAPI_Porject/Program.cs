@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -49,6 +50,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes("THIS_IS_A_VERY_SECRET_KEY_123456"))
         };
     });
+
+// register policy and handler
+builder.Services.AddSingleton<IAuthorizationHandler, StudentOwnerOrAdminHandler>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("StudentOwnerOrAdmin", policy =>
+        policy.Requirements.Add(new StudentOwnerOrAdminRequirement()));
+});
 
 // Add services to the container.
 
